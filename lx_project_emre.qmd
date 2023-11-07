@@ -2,9 +2,10 @@
 title: "luxembourg_project_HW"
 format: html
 editor: visual
+author: Emre Batarlar, Mehmet Aksoy, Sercan Akıl
 ---
 
-# Luxembourg Data Project,
+# Luxembourg Data Project
 
 ## Introduction
 
@@ -18,9 +19,57 @@ Our goal is to:
 
 -   Make some tables and plots.
 
-![](images/lux_rhode_island.png)
+The following figures below show provinces in Luxembourg and the location of Luxembourg along with all of Europe.
 
-![]()
+```{r}
+#| warning: false
+
+library(ggplot2)
+library(rnaturalearth)
+library(rnaturalearthhires)
+library(RColorBrewer)
+
+europe <- rnaturalearth::ne_countries(continent = 'europe', returnclass = "sf")
+
+ggplot() +
+  geom_sf(data = europe, aes(fill = mapcolor13), color = "#F3F3F3") + scale_fill_fermenter(palette = "RdPu") +  
+  coord_sf(xlim = c(-10, 35), ylim = c(35, 65)) +
+  ggtitle("Europe") + theme_minimal() + 
+  geom_text(data = europe,  mapping = aes(x=label_x, y=label_y, label=adm0_a3), size=3,fontface='bold')  +
+  theme(legend.position="none") +   labs(x="",y="")
+
+luxembourg<- rnaturalearth::ne_states(country  = 'Luxembourg', returnclass = "sf")
+ggplot() +
+  geom_sf(data = luxembourg, aes(fill = name), color = "darkgray") + 
+  scale_fill_manual(values = brewer.pal(5,"RdGy")) +
+  ggtitle("Luxembourg") + theme_minimal() + 
+  geom_text(data = luxembourg,  mapping = aes(x=longitude, y=latitude, label=name), size=3,fontface='bold')  +
+  theme(legend.position="none") +   labs(x="",y="")
+```
+
+The plot below shows the value of the House Price Index over time for Luxembourg and the European Union. The data for plotting was obtained from Eurostat. 
+
+```{r}
+#| warning: false
+library(ggplot2)
+
+url <- gzcon(url("https://github.com/b-rodrigues/rap4all/raw/master/datasets/prc_hpi_a__custom_4705395_page_linear.csv.gz"))
+txt <- readLines(url)
+data <- read.csv(textConnection(txt))
+
+ggplot(data, aes(x=TIME_PERIOD, y=OBS_VALUE, color= geo)) + theme_bw() +   
+ggtitle("House Price Index over time for Luxembourg and the European Union") + 
+labs(x="",y="", caption = "Source: Eurostat") +
+geom_line(linewidth=2) + 
+scale_color_manual( values=c(EU="firebrick", LU="navyblue"),
+                    guide = guide_legend(ncol = 2)) + 
+  theme(legend.position ="top",legend.title = element_blank() ) + 
+  theme(plot.title = element_text(color="#666666", face="bold", size=12, hjust = 0.05, vjust=2.12)) + 
+  theme(
+    axis.text.y = element_text(size=10, face="bold"),
+    axis.text.x = element_text(size=10,angle=45, hjust=1, face="bold"))
+
+```
 
 ## Getting Data
 
@@ -317,13 +366,15 @@ colnames(result)[colnames(result) == "canton.y"] <- "canton"
 result
 ```
 
+The box-plot graphic below show the average and outlier values of the house price for each Canton in Luxembourg. The Canton of Luxembourg has the highest average price compared to the others, but the Canton of Capellen also has one of the highest outlier prices. Vianden, Wiltz and Clevaux have approximately the lowest prices with respect to the other Cantons. Moreover, according to box-plot analysis, average house prices in Luxembourg range between 500 and 750 thousand €.
+
 ```{r}
 result <- na.omit(result)
 ggplot(data = result, aes(x = canton, y = average_price_nominal_euros , fill = canton )) +
   geom_boxplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Average Price by Canton", x = "canton", y = "Average Price (Nominal Euros)")
+  labs(title = "Average Price by Canton", x = "Canton", y = "Average Prices (Nominal Euros)")
 
 ```
 
-The box-plot graphic show the average and outlier values of the house price for each Canton in Luxembourg. The Canton of Luxembourg has the highest average price compared to the others, but the Canton of Capellen also has one of the highest outlier prices. Vianden, Wiltz and Clevaux have approximately the lowest prices with respect to the other Cantons. Moreover, according to box-plot analysis, average house prices in Luxembourg range between 500 and 750 thousand €.
+
